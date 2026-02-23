@@ -219,3 +219,14 @@ git add .
 git commit -m "feature/ui"
 git push
 ```
+
+PS C:\Users\user\Desktop\study\sell_clothes> git push
+fatal: The current branch feature/ui has no upstream branch.
+To push the current branch and set the remote as upstream, use
+
+    git push --set-upstream origin feature/ui
+
+To have this happen automatically for branches without a tracking
+upstream, see 'push.autoSetupRemote' in 'git help config'.
+
+Thì copy `git push --set-upstream origin feature/ui`

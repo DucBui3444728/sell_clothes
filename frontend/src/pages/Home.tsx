@@ -3,42 +3,9 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, ShieldCheck, Truck } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/product/ProductCard';
-import type { Product } from '../components/product/ProductCard';
+import { ALL_PRODUCTS } from '../data/products';
 
-const FEATURED_PRODUCTS: Product[] = [
-    {
-        id: '1',
-        name: 'Essence Cotton T-Shirt',
-        price: 35.00,
-        category: 'Men',
-        rating: 4.8,
-        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: '2',
-        name: 'Aura Denim Jacket',
-        price: 120.00,
-        category: 'Women',
-        rating: 4.9,
-        image: 'https://images.unsplash.com/photo-1551028719-01c1eb560841?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: '3',
-        name: 'Urban Cargo Pants',
-        price: 85.00,
-        category: 'Men',
-        rating: 4.7,
-        image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800'
-    },
-    {
-        id: '4',
-        name: 'Ethereal Silk Dress',
-        price: 150.00,
-        category: 'Women',
-        rating: 5.0,
-        image: 'https://images.unsplash.com/photo-1515347619152-192518e31dc9?auto=format&fit=crop&q=80&w=800'
-    }
-];
+const FEATURED_PRODUCTS = ALL_PRODUCTS.slice(0, 4);
 
 export const Home: React.FC = () => {
     return (

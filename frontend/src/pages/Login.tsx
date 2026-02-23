@@ -1,17 +1,42 @@
-import React from 'react';
-import { Mail, Lock, ArrowRight, Github } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export const Login: React.FC = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const { login } = useAuth();
+    const navigate = useNavigate();
+    const { showToast } = useToast();
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!email || !password) {
+            showToast('Please fill in all fields.', 'error');
+            return;
+        }
+
+        const success = login(email, password);
+        if (success) {
+            showToast('Login successful! Welcome back.', 'success');
+            navigate('/');
+        } else {
+            showToast('Invalid email or password. Try admin@aurastyle.com / 123456', 'error');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
             {/* Background Decor */}
             <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3">
-                <div className="w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                <div className="w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
             </div>
             <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3">
-                <div className="w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                <div className="w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
             </div>
 
             <div className="w-full max-w-md relative z-10">
@@ -25,7 +50,14 @@ export const Login: React.FC = () => {
                         </p>
                     </div>
 
-                    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                    {/* Demo Credentials Hint */}
+                    <div className="mb-6 bg-primary-50 border border-primary-200 text-primary-700 px-4 py-3 rounded-xl text-sm">
+                        <p className="font-semibold mb-1">Demo Account:</p>
+                        <p>Email: <span className="font-mono">admin@aurastyle.com</span></p>
+                        <p>Password: <span className="font-mono">123456</span></p>
+                    </div>
+
+                    <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
                                 Email Address
@@ -37,6 +69,8 @@ export const Login: React.FC = () => {
                                 <input
                                     id="email"
                                     type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-slate-50/50 transition-all text-slate-900 shadow-sm"
                                     placeholder="you@example.com"
                                 />
@@ -59,6 +93,8 @@ export const Login: React.FC = () => {
                                 <input
                                     id="password"
                                     type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-slate-50/50 transition-all text-slate-900 shadow-sm"
                                     placeholder="••••••••"
                                 />
@@ -70,24 +106,6 @@ export const Login: React.FC = () => {
                             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </form>
-
-                    <div className="mt-8">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-slate-200"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-slate-500">Or continue with</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6">
-                            <Button variant="secondary" className="w-full h-12 rounded-xl flex items-center justify-center gap-2">
-                                <Github className="w-5 h-5 text-slate-800" />
-                                <span className="text-slate-800 font-medium">GitHub</span>
-                            </Button>
-                        </div>
-                    </div>
 
                     <p className="mt-8 text-center text-sm text-slate-600">
                         Don't have an account?{' '}

@@ -1,0 +1,68 @@
+import type { Product } from '../components/product/ProductCard';
+
+export const ALL_PRODUCTS: Product[] = [
+    {
+        id: '1',
+        name: 'Essence Cotton T-Shirt',
+        price: 35.00,
+        category: 'Men',
+        rating: 4.8,
+        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800',
+    },
+    {
+        id: '2',
+        name: 'Aura Denim Jacket',
+        price: 120.00,
+        category: 'Women',
+        rating: 4.9,
+        image: 'https://images.unsplash.com/photo-1551028719-01c1eb560841?auto=format&fit=crop&q=80&w=800',
+    },
+    {
+        id: '3',
+        name: 'Urban Cargo Pants',
+        price: 85.00,
+        category: 'Men',
+        rating: 4.7,
+        image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&q=80&w=800',
+    },
+    {
+        id: '4',
+        name: 'Ethereal Silk Dress',
+        price: 150.00,
+        category: 'Women',
+        rating: 5.0,
+        image: 'https://images.unsplash.com/photo-1515347619152-192518e31dc9?auto=format&fit=crop&q=80&w=800',
+    },
+    {
+        id: '5',
+        name: 'Classic Leather Belt',
+        price: 45.00,
+        category: 'Accessories',
+        rating: 4.5,
+        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=800',
+    },
+    {
+        id: '6',
+        name: 'Minimalist Sneakers',
+        price: 95.00,
+        category: 'Shoes',
+        rating: 4.8,
+        image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=800',
+    },
+    {
+        id: '7',
+        name: 'Knit Wool Sweater',
+        price: 110.00,
+        category: 'Men',
+        rating: 4.6,
+        image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800',
+    },
+    {
+        id: '8',
+        name: 'Pleated Midi Skirt',
+        price: 75.00,
+        category: 'Women',
+        rating: 4.4,
+        image: 'https://images.unsplash.com/photo-1582142407894-ec85a1260a46?auto=format&fit=crop&q=80&w=800',
+    },
+];

@@ -1,25 +1,16 @@
 import React, { useState } from 'react';
-import { Star, Minus, Plus, ShoppingCart, Heart, Shield, RefreshCw, Truck } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { Star, Minus, Plus, ShoppingCart, Heart, Shield, RefreshCw, Truck, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { ALL_PRODUCTS } from '../data/products';
 
 export const ProductDetail: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const product = ALL_PRODUCTS.find(p => p.id === id);
+
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState('M');
     const [selectedColor, setSelectedColor] = useState('Navy');
-
-    const product = {
-        name: "Essence Cotton T-Shirt",
-        price: 35.00,
-        rating: 4.8,
-        reviews: 124,
-        description: "Our signature organic cotton t-shirt offers an unparalleled level of comfort. Pre-shrunk and garment-dyed for a lived-in feel from day one. Perfect for any casual occasion.",
-        features: [
-            "100% Organic Cotton",
-            "Regular fit, true to size",
-            "Ribbed crewneck",
-            "Machine washable"
-        ]
-    };
 
     const sizes = ['S', 'M', 'L', 'XL'];
     const colors = [
@@ -27,17 +18,44 @@ export const ProductDetail: React.FC = () => {
         { name: 'White', class: 'bg-white border border-slate-200' },
         { name: 'Sky Blue', class: 'bg-primary-300' }
     ];
-    const images = [
-        'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?auto=format&fit=crop&q=80&w=800'
-    ];
 
-    const [mainImage, setMainImage] = useState(images[0]);
+    // Use product image + some fallback gallery images
+    const images = product
+        ? [
+            product.image,
+            'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?auto=format&fit=crop&q=80&w=800'
+        ]
+        : [];
+
+    const [mainImage, setMainImage] = useState(images[0] || '');
+
+    if (!product) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-6">
+                <h1 className="text-3xl font-bold text-slate-900">Product Not Found</h1>
+                <p className="text-slate-500">The product you're looking for doesn't exist.</p>
+                <Link to="/shop">
+                    <Button variant="primary" icon={<ArrowLeft />}>
+                        Back to Shop
+                    </Button>
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white min-h-screen py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                {/* Breadcrumbs */}
+                <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
+                    <Link to="/" className="hover:text-primary-600 transition-colors">Home</Link>
+                    <span>/</span>
+                    <Link to="/shop" className="hover:text-primary-600 transition-colors">Shop</Link>
+                    <span>/</span>
+                    <span className="text-slate-900 font-medium">{product.name}</span>
+                </nav>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
                     {/* Image Gallery */}
@@ -63,6 +81,7 @@ export const ProductDetail: React.FC = () => {
 
                     {/* Product Info */}
                     <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-primary-600 uppercase tracking-wider mb-2">{product.category}</span>
                         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{product.name}</h1>
 
                         <div className="flex items-center gap-4 mt-4">
@@ -70,12 +89,12 @@ export const ProductDetail: React.FC = () => {
                             <div className="flex items-center gap-1 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
                                 <Star className="w-4 h-4 text-emerald-500 fill-emerald-500" />
                                 <span className="text-sm font-semibold text-slate-700">{product.rating}</span>
-                                <span className="text-sm text-slate-500">({product.reviews} reviews)</span>
+                                <span className="text-sm text-slate-500">(124 reviews)</span>
                             </div>
                         </div>
 
                         <p className="mt-6 text-lg text-slate-600 leading-relaxed">
-                            {product.description}
+                            Our signature piece that offers an unparalleled level of comfort. Pre-shrunk and garment-dyed for a lived-in feel from day one. Perfect for any casual occasion.
                         </p>
 
                         <div className="mt-8 border-t border-slate-100 pt-8 space-y-8">
