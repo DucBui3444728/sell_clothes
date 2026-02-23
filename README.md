@@ -101,6 +101,7 @@ Nó hoạt động như một "người trung gian" cho phép hai ứng dụng t
 Tailwind CSS là một framework CSS giúp bạn xây dựng giao diện web nhanh chóng và dễ dàng.
 
 Chú ý: Phân biệt Framework và Library
+
 - Library
 
 Tập hợp các hàm / class được thiết kế để được gọi.
@@ -155,7 +156,66 @@ Cách dừng chương trình frontend. Chọn vào terminal và nhấn:
 Ctrl + C
 ```
 
+Chú ý: http://localhost:5173/login sẽ cho biết đang ở trang nào thông qua /pages
 
-# Làm việc với git
+Cách để test trên điện thoại sử dụng Inspect
+
+Vào website, chuột phải + inspect + chọn device
 
 
+# Làm việc với git khi mới tạo dự án
+
+Tạo project trên github:
+
+![alt text](image.png)
+
+```
+git init
+```
+
+Reinitialized existing Git repository in C:/Users/user/Desktop/study/sell_clothes/.git/
+
+```
+git add .
+```
+
+```
+git commit -m "Initial commit"
+```
+
+Khi mới tạo dự án thì sẽ phải 
+
+```
+git branch -M main
+git remote add origin https://github.com/DucBui3444728/sell_clothes.git
+git push -u origin main
+```
+
+Enumerating objects: 40, done.
+Counting objects: 100% (40/40), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (36/36), done.
+Writing objects: 100% (40/40), 131.08 KiB | 6.90 MiB/s, done.
+Total 40 (delta 6), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (6/6), done.
+To https://github.com/DucBui3444728/sell_clothes.git
+ * [new branch]      main -> main
+branch 'main' set up to track 'origin/main'.
+
+Đã đẩy lên thành công
+
+# Làm việc với git khi đã có dự án
+
+Cách tạo nhánh (branch) để làm việc
+
+```
+git checkout -b feature/ui
+```
+
+Đẩy code lên github
+
+```
+git add .
+git commit -m "feature/ui"
+git push
+```
