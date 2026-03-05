@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ProductCard } from '../components/product/ProductCard';
 import { SlidersHorizontal, ChevronDown, Search } from 'lucide-react';
@@ -7,6 +7,8 @@ import { ALL_PRODUCTS } from '../data/products';
 
 export const Shop: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState<string>('All');
+    const [activeSize, setActiveSize] = useState<string>('All');
+    const [activeColor, setActiveColor] = useState<string>('All');
     const [currentPage, setCurrentPage] = useState<number>(1);
     const location = useLocation();
 
@@ -17,12 +19,33 @@ export const Shop: React.FC = () => {
     const ITEMS_PER_PAGE = 6;
 
     const categories = ['All', 'Men', 'Women', 'Accessories', 'Shoes'];
+    const sizes = ['All', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '38', '39', '40', '41', '42', 'One Size'];
+    const colors = [
+        { name: 'All', hex: 'all' },
+        { name: 'Black', hex: '#000000' },
+        { name: 'White', hex: '#ffffff' },
+        { name: 'Gray', hex: '#9ca3af' },
+        { name: 'Blue', hex: '#3b82f6' },
+        { name: 'Dark Blue', hex: '#1e3a8a' },
+        { name: 'Pink', hex: '#ec4899' },
+        { name: 'Green', hex: '#065f46' },
+    ];
 
-    // Filter by both category AND search query
+    // Filter by category, search query, size AND color
     const filteredProducts = ALL_PRODUCTS.filter(p => {
         const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
         const matchesSearch = searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
+        const matchesSize = activeSize === 'All' || (p.sizes && p.sizes.includes(activeSize));
+        // Simple color matching based on hex codes in our mock data
+        const matchesColor = activeColor === 'All' || (p.colors && (
+            // A somewhat loose match for mock data purposes
+            p.colors.includes(activeColor) ||
+            (activeColor === '#3b82f6' && p.colors.some(c => c.toLowerCase().includes('blue') || c === '#60a5fa' || c === '#93c5fd')) ||
+            (activeColor === '#ffffff' && p.colors.includes('#FFFFFF')) ||
+            (activeColor === '#9ca3af' && p.colors.some(c => ['#e5e7eb', '#9ca3af', '#374151', '#4b5563', '#1f2937', '#f3f4f6'].includes(c)))
+        ));
+
+        return matchesCategory && matchesSearch && matchesSize && matchesColor;
     });
 
     const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
@@ -35,8 +58,8 @@ export const Shop: React.FC = () => {
 
                 <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Shop Collection</h1>
-                        <p className="mt-4 text-slate-500 max-w-2xl">
+                        <h1 className="text-4xl font-serif font-medium text-slate-900 tracking-tight">Shop Collection</h1>
+                        <p className="mt-4 text-slate-500 max-w-2xl font-light">
                             Browse our entire collection. Use the filters to find precisely what you're looking for.
                         </p>
                     </div>
@@ -52,9 +75,9 @@ export const Shop: React.FC = () => {
                     {/* Sidebar Filters */}
                     <aside className="w-full lg:w-64 shrink-0">
                         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm sticky top-24">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-semibold text-lg text-slate-900 flex items-center gap-2">
-                                    <SlidersHorizontal className="w-5 h-5 text-primary-600" />
+                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                                <h3 className="font-serif font-medium text-lg text-slate-900 flex items-center gap-2">
+                                    <SlidersHorizontal className="w-5 h-5 text-primary-800" />
                                     Filters
                                 </h3>
                             </div>
@@ -87,11 +110,61 @@ export const Shop: React.FC = () => {
 
                                 <div className="h-px bg-slate-100 w-full" />
 
+                                {/* Colors */}
+                                <div>
+                                    <h4 className="font-medium text-slate-900 mb-4">Color</h4>
+                                    <div className="flex flex-wrap gap-3">
+                                        {colors.map(color => (
+                                            <button
+                                                key={color.name}
+                                                onClick={() => {
+                                                    setActiveColor(color.hex);
+                                                    setCurrentPage(1);
+                                                }}
+                                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${activeColor === color.hex ? 'border-primary-600 scale-110 shadow-sm' : 'border-transparent hover:scale-110'
+                                                    } ${color.name === 'All' ? 'bg-gradient-to-tr from-rose-400 via-fuchsia-500 to-indigo-500' : ''}`}
+                                                style={color.name !== 'All' ? { backgroundColor: color.hex } : {}}
+                                                title={color.name}
+                                            >
+                                                {color.name === 'All' && <span className="text-[10px] font-bold text-white">All</span>}
+                                                {color.name === 'White' && activeColor === color.hex && <div className="w-3 h-3 bg-primary-600 rounded-full" />}
+                                                {color.name !== 'White' && color.name !== 'All' && activeColor === color.hex && <div className="w-3 h-3 bg-white rounded-full" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="h-px bg-slate-100 w-full" />
+
+                                {/* Sizes */}
+                                <div>
+                                    <h4 className="font-medium text-slate-900 mb-4">Size</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {sizes.map(size => (
+                                            <button
+                                                key={size}
+                                                onClick={() => {
+                                                    setActiveSize(size);
+                                                    setCurrentPage(1);
+                                                }}
+                                                className={`px-3 py-1.5 min-w-[3rem] text-sm font-medium rounded-lg border transition-all ${activeSize === size
+                                                    ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900'
+                                                    }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="h-px bg-slate-100 w-full" />
+
                                 {/* Price Range (Visual only for mockup) */}
                                 <div>
-                                    <h4 className="font-medium text-slate-900 mb-4">Price Range</h4>
+                                    <h4 className="font-medium text-slate-900 mb-4 uppercase tracking-wider text-xs">Price Range</h4>
                                     <div className="space-y-4">
-                                        <input type="range" className="w-full mx-auto accent-primary-600" />
+                                        <input type="range" className="w-full mx-auto accent-slate-900" />
                                         <div className="flex items-center justify-between gap-4">
                                             <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 w-full text-center">$0</div>
                                             <span className="text-slate-400">-</span>
@@ -111,8 +184,8 @@ export const Shop: React.FC = () => {
                             </span>
 
                             <div className="flex items-center gap-2">
-                                <span className="text-sm text-slate-500">Sort by:</span>
-                                <Button variant="secondary" className="!px-3 !py-1.5 h-auto text-sm border-slate-200 shadow-none">
+                                <span className="text-sm text-slate-500 uppercase tracking-widest text-xs">Sort by:</span>
+                                <Button variant="secondary" className="!px-3 !py-1.5 h-auto text-sm border-slate-200 shadow-none font-medium">
                                     Featured
                                     <ChevronDown className="w-4 h-4 ml-2" />
                                 </Button>
@@ -137,6 +210,8 @@ export const Shop: React.FC = () => {
                                     className="mt-6"
                                     onClick={() => {
                                         setActiveCategory('All');
+                                        setActiveSize('All');
+                                        setActiveColor('All');
                                         if (searchQuery) window.history.replaceState({}, '', '/shop');
                                     }}
                                 >

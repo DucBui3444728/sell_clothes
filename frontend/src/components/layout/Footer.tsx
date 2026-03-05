@@ -5,17 +5,31 @@ import { Button } from '../ui/Button';
 
 export const Footer: React.FC = () => {
     return (
-        <footer className="bg-slate-900 text-slate-300 pt-16 pb-8">
+        <footer className="bg-[#0c0a09] text-slate-400 pt-20 pb-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="border-b border-slate-800 pb-14 mb-12 flex flex-col items-start">
+                    {/* Ornate brand mark */}
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="w-12 h-px bg-slate-600" />
+                        <span className="text-[10px] tracking-[0.4em] text-slate-500 uppercase">Est. 2024</span>
+                        <div className="w-12 h-px bg-slate-600" />
+                    </div>
+                    <Link to="/" className="inline-block font-serif text-5xl tracking-[0.25em] text-white uppercase mb-2 hover:text-slate-200 transition-colors">
+                        Douglas
+                    </Link>
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="w-12 h-px bg-slate-600" />
+                        <span className="text-[10px] tracking-[0.4em] text-slate-500 uppercase">Maison de Mode</span>
+                        <div className="w-12 h-px bg-slate-600" />
+                    </div>
+                    <p className="text-sm leading-relaxed text-slate-500 max-w-sm">
+                        A curated house of luxury fashion. Each piece is a statement of refined taste and timeless elegance.
+                    </p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
                     {/* Brand & About */}
                     <div className="space-y-4">
-                        <Link to="/" className="inline-block text-2xl font-bold text-white tracking-tight">
-                            Aura<span className="text-primary-500">Style</span>
-                        </Link>
-                        <p className="text-sm leading-relaxed text-slate-400">
-                            Elevate your everyday style with our premium collection of contemporary clothing. Designed for comfort, crafted for confidence.
-                        </p>
+                        <p className="text-xs uppercase tracking-widest text-slate-500 mb-4">Follow Us</p>
                         <div className="flex space-x-4 pt-2">
                             <a href="#" className="text-slate-400 hover:text-primary-400 transition-colors">
                                 <Facebook className="h-5 w-5" />
@@ -58,7 +72,7 @@ export const Footer: React.FC = () => {
                             </li>
                             <li className="flex items-center gap-3">
                                 <Mail className="h-5 w-5 text-primary-500 shrink-0" />
-                                <span>support@aurastyle.com</span>
+                                <span>support@douglas.com</span>
                             </li>
                         </ul>
                     </div>
@@ -86,7 +100,7 @@ export const Footer: React.FC = () => {
                 </div>
 
                 <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-                    <p>© {new Date().getFullYear()} AuraStyle. All rights reserved.</p>
+                    <p>© {new Date().getFullYear()} Douglas. All rights reserved.</p>
                     <div className="flex gap-4">
                         <Link to="/privacy" className="hover:text-primary-400 transition-colors">Privacy Policy</Link>
                         <Link to="/terms" className="hover:text-primary-400 transition-colors">Terms of Service</Link>

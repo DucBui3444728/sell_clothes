@@ -8,15 +8,39 @@ import { useToast } from '../context/ToastContext';
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
     const { login } = useAuth();
     const navigate = useNavigate();
     const { showToast } = useToast();
 
+    const validateForm = () => {
+        const newErrors: { email?: string; password?: string } = {};
+        let isValid = true;
+
+        if (!email) {
+            newErrors.email = 'Email address is required';
+            isValid = false;
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = 'Please enter a valid email address';
+            isValid = false;
+        }
+
+        if (!password) {
+            newErrors.password = 'Password is required';
+            isValid = false;
+        } else if (password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!email || !password) {
-            showToast('Please fill in all fields.', 'error');
+        if (!validateForm()) {
             return;
         }
 
@@ -70,11 +94,18 @@ export const Login: React.FC = () => {
                                     id="email"
                                     type="email"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-slate-50/50 transition-all text-slate-900 shadow-sm"
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (errors.email) setErrors({ ...errors, email: undefined });
+                                    }}
+                                    className={`block w-full pl-10 pr-3 py-3 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-slate-50/50 transition-all text-slate-900 shadow-sm ${errors.email ? 'border-red-300 ring-red-100 ring-4 focus:ring-red-200 focus:border-red-400' : 'border-slate-200'
+                                        }`}
                                     placeholder="you@example.com"
                                 />
                             </div>
+                            {errors.email && (
+                                <p className="mt-2 text-sm text-red-500">{errors.email}</p>
+                            )}
                         </div>
 
                         <div>
@@ -94,11 +125,18 @@ export const Login: React.FC = () => {
                                     id="password"
                                     type="password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-slate-50/50 transition-all text-slate-900 shadow-sm"
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (errors.password) setErrors({ ...errors, password: undefined });
+                                    }}
+                                    className={`block w-full pl-10 pr-3 py-3 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-slate-50/50 transition-all text-slate-900 shadow-sm ${errors.password ? 'border-red-300 ring-red-100 ring-4 focus:ring-red-200 focus:border-red-400' : 'border-slate-200'
+                                        }`}
                                     placeholder="••••••••"
                                 />
                             </div>
+                            {errors.password && (
+                                <p className="mt-2 text-sm text-red-500">{errors.password}</p>
+                            )}
                         </div>
 
                         <Button variant="primary" className="w-full h-12 text-base rounded-xl shadow-lg shadow-primary-500/30 group">
