@@ -248,3 +248,12 @@ Sẽ chọn open full request
 <img width="930" height="692" alt="image" src="https://github.com/user-attachments/assets/16d2ba6e-2d53-42f8-92f5-ac13fada6c6f" />
 
 Xong sẽ chọn Create Full Request
+
+Nguyên tắc hoạt động deploy là mình sẽ build project (chạy 1 lệnh để đưa tất các code thành 1 file duy nhất)
+
+```
+cd frontend
+npm run build
+```
+
+Tạo 2 thư mục dist (build) chứa project đã build của mình. Có nghĩa phải build thành công thì mới deploy được
