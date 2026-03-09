@@ -235,5 +235,16 @@ Thì copy `git push --set-upstream origin feature/ui`
 
 Bằng cách tạo tài khoản vercel (đăng nhập bằng google) sau đó liên kết với github của mình
 
-Khi đó mình có thể lựa chọn project front end mình muốn deploy
+Khi đó mình có thể lựa chọn project front end mình muốn deploy (Cực kỳ đơn giản)
 
+# Merge code từ nhánh feature/ui --> main
+
+Lên github vào nhánh feature/ui
+
+<img width="921" height="478" alt="image" src="https://github.com/user-attachments/assets/62cb55d5-42f0-4438-b7a2-0322f5bf78a0" />
+
+Sẽ chọn open full request
+
+<img width="930" height="692" alt="image" src="https://github.com/user-attachments/assets/16d2ba6e-2d53-42f8-92f5-ac13fada6c6f" />
+
+Xong sẽ chọn Create Full Request
