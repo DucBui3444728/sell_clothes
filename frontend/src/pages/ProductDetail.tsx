@@ -1,43 +1,83 @@
-import React, { useState } from 'react';
-import { Star, Minus, Plus, ShoppingCart, Heart, Shield, RefreshCw, Truck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Star, Minus, Plus, Heart, Shield, RefreshCw, Truck, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { ALL_PRODUCTS } from '../data/products';
+import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 
 export const ProductDetail: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const product = ALL_PRODUCTS.find(p => p.id === id);
+
+    const { addToCart } = useCart();
+    const { showToast } = useToast();
+
     const [quantity, setQuantity] = useState(1);
-    const [selectedSize, setSelectedSize] = useState('M');
-    const [selectedColor, setSelectedColor] = useState('Navy');
+    const [selectedSize, setSelectedSize] = useState('');
+    const [selectedColor, setSelectedColor] = useState('');
 
-    const product = {
-        name: "Essence Cotton T-Shirt",
-        price: 35.00,
-        rating: 4.8,
-        reviews: 124,
-        description: "Our signature organic cotton t-shirt offers an unparalleled level of comfort. Pre-shrunk and garment-dyed for a lived-in feel from day one. Perfect for any casual occasion.",
-        features: [
-            "100% Organic Cotton",
-            "Regular fit, true to size",
-            "Ribbed crewneck",
-            "Machine washable"
+    const sizes = product?.sizes || ['S', 'M', 'L', 'XL'];
+    const colors = product?.colors || ['#0f172a', '#ffffff', '#38bdf8']; // Fallback colors
+
+    useEffect(() => {
+        if (sizes.length > 0) setSelectedSize(sizes[0]);
+        if (colors.length > 0) setSelectedColor(colors[0]);
+    }, [product]);
+
+    // Use product image + some fallback gallery images
+    const images = product
+        ? [
+            product.image,
+            'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?auto=format&fit=crop&q=80&w=800'
         ]
+        : [];
+
+    const [mainImage, setMainImage] = useState(images[0] || '');
+
+    if (!product) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-6">
+                <h1 className="text-3xl font-bold text-slate-900">Product Not Found</h1>
+                <p className="text-slate-500">The product you're looking for doesn't exist.</p>
+                <Link to="/shop">
+                    <Button variant="primary" icon={<ArrowLeft />}>
+                        Back to Shop
+                    </Button>
+                </Link>
+            </div>
+        );
+    }
+
+    const handleAddToCart = () => {
+        if (!product) return;
+
+        addToCart({
+            productId: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            color: selectedColor, // In a real app we'd map hex to name if needed
+            size: selectedSize,
+            quantity: quantity,
+        });
+
+        showToast('Item has been added to cart.', 'success');
     };
-
-    const sizes = ['S', 'M', 'L', 'XL'];
-    const colors = [
-        { name: 'Navy', class: 'bg-slate-800' },
-        { name: 'White', class: 'bg-white border border-slate-200' },
-        { name: 'Sky Blue', class: 'bg-primary-300' }
-    ];
-    const images = [
-        'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?auto=format&fit=crop&q=80&w=800'
-    ];
-
-    const [mainImage, setMainImage] = useState(images[0]);
 
     return (
         <div className="bg-white min-h-screen py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                {/* Breadcrumbs */}
+                <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
+                    <Link to="/" className="hover:text-primary-600 transition-colors">Home</Link>
+                    <span>/</span>
+                    <Link to="/shop" className="hover:text-primary-600 transition-colors">Shop</Link>
+                    <span>/</span>
+                    <span className="text-slate-900 font-medium">{product.name}</span>
+                </nav>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
                     {/* Image Gallery */}
@@ -63,33 +103,35 @@ export const ProductDetail: React.FC = () => {
 
                     {/* Product Info */}
                     <div className="flex flex-col">
-                        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{product.name}</h1>
+                        <span className="text-sm font-medium text-primary-800 uppercase tracking-widest mb-4 inline-block">{product.category}</span>
+                        <h1 className="text-3xl sm:text-5xl font-serif font-medium text-slate-900 leading-tight">{product.name}</h1>
 
-                        <div className="flex items-center gap-4 mt-4">
-                            <span className="text-3xl font-bold text-primary-600">${product.price.toFixed(2)}</span>
-                            <div className="flex items-center gap-1 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                        <div className="flex items-center gap-4 mt-6">
+                            <span className="text-3xl font-light text-slate-900">${product.price.toFixed(2)}</span>
+                            <div className="flex items-center gap-1 bg-slate-50 px-3 py-1 border border-slate-200">
                                 <Star className="w-4 h-4 text-emerald-500 fill-emerald-500" />
                                 <span className="text-sm font-semibold text-slate-700">{product.rating}</span>
-                                <span className="text-sm text-slate-500">({product.reviews} reviews)</span>
+                                <span className="text-sm text-slate-500">(124 reviews)</span>
                             </div>
                         </div>
 
-                        <p className="mt-6 text-lg text-slate-600 leading-relaxed">
-                            {product.description}
+                        <p className="mt-8 text-lg text-slate-600 leading-relaxed font-light">
+                            Our signature piece that offers an unparalleled level of comfort. Pre-shrunk and garment-dyed for a lived-in feel from day one. Perfect for any casual occasion.
                         </p>
 
                         <div className="mt-8 border-t border-slate-100 pt-8 space-y-8">
                             {/* Colors */}
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wider">Color: {selectedColor}</h3>
-                                <div className="flex gap-3">
-                                    {colors.map(color => (
+                                <h3 className="text-xs font-semibold text-slate-900 mb-4 uppercase tracking-widest">Color</h3>
+                                <div className="flex gap-4">
+                                    {colors.map(colorHex => (
                                         <button
-                                            key={color.name}
-                                            onClick={() => setSelectedColor(color.name)}
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${selectedColor === color.name ? 'ring-2 ring-primary-600 ring-offset-2' : ''}`}
+                                            key={colorHex}
+                                            onClick={() => setSelectedColor(colorHex)}
+                                            className={`w-12 h-12 flex items-center justify-center transition-all border ${selectedColor === colorHex ? 'border-black p-1' : 'border-transparent'}`}
+                                            title={colorHex}
                                         >
-                                            <div className={`w-8 h-8 rounded-full ${color.class}`} />
+                                            <div className="w-full h-full rounded-sm border border-slate-200" style={{ backgroundColor: colorHex }} />
                                         </button>
                                     ))}
                                 </div>
@@ -97,16 +139,16 @@ export const ProductDetail: React.FC = () => {
 
                             {/* Sizes */}
                             <div>
-                                <div className="flex justify-between items-center mb-3">
-                                    <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Size: {selectedSize}</h3>
-                                    <button className="text-sm text-primary-600 font-medium hover:underline">Size Guide</button>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-widest">Size: <span className="text-slate-500 font-normal ml-2">{selectedSize}</span></h3>
+                                    <button className="text-xs text-slate-500 uppercase tracking-widest hover:text-black hover:underline transition-colors">Size Guide</button>
                                 </div>
                                 <div className="grid grid-cols-4 gap-3">
                                     {sizes.map(size => (
                                         <button
                                             key={size}
                                             onClick={() => setSelectedSize(size)}
-                                            className={`py-3 rounded-lg font-medium transition-all ${selectedSize === size ? 'bg-primary-600 text-white border-primary-600 shadow-md' : 'bg-white text-slate-700 border border-slate-200 hover:border-primary-400'}`}
+                                            className={`py-3 px-4 text-sm font-medium transition-all ${selectedSize === size ? 'bg-black text-white' : 'bg-transparent text-slate-700 border border-slate-300 hover:border-slate-800'}`}
                                         >
                                             {size}
                                         </button>
@@ -116,8 +158,8 @@ export const ProductDetail: React.FC = () => {
 
                             {/* Quantity */}
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wider">Quantity</h3>
-                                <div className="flex items-center w-32 bg-slate-50 border border-slate-200 rounded-lg p-1">
+                                <h3 className="text-xs font-semibold text-slate-900 mb-4 uppercase tracking-widest">Quantity</h3>
+                                <div className="flex items-center w-32 border border-slate-300 p-1">
                                     <button
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                         className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-primary-600 transition-colors"
@@ -135,8 +177,13 @@ export const ProductDetail: React.FC = () => {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                                <Button variant="primary" size="lg" className="flex-1 h-14 text-lg rounded-xl shadow-lg shadow-primary-500/20" icon={<ShoppingCart />}>
+                            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                                <Button
+                                    variant="primary"
+                                    size="lg"
+                                    className="flex-1 h-16"
+                                    onClick={handleAddToCart}
+                                >
                                     Add to Cart
                                 </Button>
                             </div>
