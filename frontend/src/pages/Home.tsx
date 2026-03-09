@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, ShieldCheck, Truck } from 'lucide-react';
-import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/product/ProductCard';
 import { ALL_PRODUCTS } from '../data/products';
 
