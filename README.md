@@ -231,4 +231,9 @@ upstream, see 'push.autoSetupRemote' in 'git help config'.
 
 Thì copy `git push --set-upstream origin feature/ui`
 
+# Deploy frontend lên vercel miễn phí
+
+Bằng cách tạo tài khoản vercel (đăng nhập bằng google) sau đó liên kết với github của mình
+
+Khi đó mình có thể lựa chọn project front end mình muốn deploy
 
