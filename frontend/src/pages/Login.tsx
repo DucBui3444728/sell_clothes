@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { authService } from '../services/api';
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -37,19 +38,29 @@ export const Login: React.FC = () => {
         return isValid;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validateForm()) {
             return;
         }
 
-        const success = login(email, password);
-        if (success) {
+        try {
+            const data = await authService.login({ email, password });
+            
+            const mappedUser = {
+                id: data.user.id,
+                email: data.user.email,
+                name: data.user.full_name,
+                role: data.user.role || 'user'
+            };
+            
+            login(mappedUser, data.access_token, data.refresh_token);
+            
             showToast('Login successful! Welcome back.', 'success');
             navigate('/');
-        } else {
-            showToast('Invalid email or password. Try admin@aurastyle.com / 123456', 'error');
+        } catch (error: any) {
+            showToast(error.response?.data?.message || 'Invalid email or password.', 'error');
         }
     };
 
@@ -74,12 +85,7 @@ export const Login: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* Demo Credentials Hint */}
-                    <div className="mb-6 bg-primary-50 border border-primary-200 text-primary-700 px-4 py-3 rounded-xl text-sm">
-                        <p className="font-semibold mb-1">Demo Account:</p>
-                        <p>Email: <span className="font-mono">admin@aurastyle.com</span></p>
-                        <p>Password: <span className="font-mono">123456</span></p>
-                    </div>
+
 
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
@@ -127,32 +133,32 @@ export const Login: React.FC = () => {
                                     value={password}
                                     onChange={(e) => {
                                         setPassword(e.target.value);
-                                        if (errors.password) setErrors({ ...errors, password: undefined });
-                                    }}
-                                    className={`block w-full pl-10 pr-3 py-3 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-slate-50/50 transition-all text-slate-900 shadow-sm ${errors.password ? 'border-red-300 ring-red-100 ring-4 focus:ring-red-200 focus:border-red-400' : 'border-slate-200'
-                                        }`}
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                            {errors.password && (
-                                <p className="mt-2 text-sm text-red-500">{errors.password}</p>
-                            )}
-                        </div>
+                                         if (errors.password) setErrors({ ...errors, password: undefined });
+                                     }}
+                                     className={`block w-full pl-10 pr-3 py-3 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-slate-50/50 transition-all text-slate-900 shadow-sm ${errors.password ? 'border-red-300 ring-red-100 ring-4 focus:ring-red-200 focus:border-red-400' : 'border-slate-200'
+                                         }`}
+                                     placeholder="••••••••"
+                                 />
+                             </div>
+                             {errors.password && (
+                                 <p className="mt-2 text-sm text-red-500">{errors.password}</p>
+                             )}
+                         </div>
 
-                        <Button variant="primary" className="w-full h-12 text-base rounded-xl shadow-lg shadow-primary-500/30 group">
-                            Sign In
-                            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                    </form>
+                         <Button variant="primary" className="w-full h-12 text-base rounded-xl shadow-lg shadow-primary-500/30 group">
+                             Sign In
+                             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                         </Button>
+                     </form>
 
-                    <p className="mt-8 text-center text-sm text-slate-600">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="font-semibold text-primary-600 hover:text-primary-500">
-                            Sign up free
-                        </Link>
-                    </p>
-                </div>
-            </div>
-        </div>
-    );
-};
+                     <p className="mt-8 text-center text-sm text-slate-600">
+                         Don't have an account?{' '}
+                         <Link to="/register" className="font-semibold text-primary-600 hover:text-primary-500">
+                             Sign up free
+                         </Link>
+                     </p>
+                 </div>
+             </div>
+         </div>
+     );
+ };

@@ -1,14 +1,136 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUserActivity } from '../context/UserActivityContext';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/product/ProductCard';
-import { User, Package, Settings, LogOut, ChevronRight, Edit2, MapPin, CreditCard, Shield, Lock, Clock } from 'lucide-react';
+import { User, Package, Settings, LogOut, ChevronRight, Edit2, MapPin, CreditCard, Shield, Lock, Clock, Camera, Save, X, Plus, Trash2 } from 'lucide-react';
+import { userService, addressService } from '../services/api';
+import type { Address } from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 export const Profile: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
     const { orders, recentProducts } = useUserActivity();
     const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'settings'>('profile');
+    const { showToast } = useToast();
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        full_name: '',
+        phone: '',
+        gender: '',
+        dob: ''
+    });
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+    // Address State
+    const [addresses, setAddresses] = useState<Address[]>([]);
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+    const [editingAddress, setEditingAddress] = useState<Partial<Address> | null>(null);
+
+    useEffect(() => {
+        if (user && !isEditing && activeTab === 'profile') {
+            loadProfile();
+            loadAddresses();
+        }
+    }, [user, isEditing, activeTab]);
+
+    const loadAddresses = async () => {
+        try {
+            const data = await addressService.getAddresses();
+            setAddresses(data);
+        } catch (error) {
+            console.error('Failed to load addresses', error);
+        }
+    };
+
+    const handleDeleteAddress = async (id: string) => {
+        try {
+            await addressService.deleteAddress(id);
+            showToast('Address deleted successfully!', 'success');
+            loadAddresses();
+        } catch (error: any) {
+            showToast(error.response?.data?.message || 'Failed to delete address', 'error');
+        }
+    };
+
+    const handleAddressSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingAddress?.id) {
+                await addressService.updateAddress(editingAddress.id, editingAddress);
+                showToast('Address updated successfully!', 'success');
+            } else {
+                await addressService.createAddress(editingAddress || {});
+                showToast('Address added successfully!', 'success');
+            }
+            setIsAddressModalOpen(false);
+            setEditingAddress(null);
+            loadAddresses();
+        } catch (error: any) {
+            showToast(error.response?.data?.message || 'Failed to save address', 'error');
+        }
+    };
+
+    const loadProfile = async () => {
+        try {
+            const data = await userService.getProfile();
+            setFormData({
+                full_name: data.full_name || '',
+                phone: data.phone || '',
+                gender: data.gender || '',
+                dob: data.dob ? data.dob.split('T')[0] : ''
+            });
+            updateUser({
+                name: data.full_name,
+                avatar: data.avatar,
+                phone: data.phone,
+                gender: data.gender,
+                dob: data.dob
+            });
+        } catch (error) {
+            console.error('Failed to load profile', error);
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        try {
+            const uploadData = new FormData();
+            uploadData.append('full_name', formData.full_name);
+            uploadData.append('phone', formData.phone);
+            uploadData.append('gender', formData.gender);
+            uploadData.append('dob', formData.dob);
+            if (avatarFile) {
+                uploadData.append('avatar', avatarFile);
+            }
+
+            const response = await userService.updateProfile(uploadData);
+            
+            updateUser({
+                name: response.user.full_name,
+                avatar: response.user.avatar,
+                phone: response.user.phone,
+                gender: response.user.gender,
+                dob: response.user.dob
+            });
+            
+            showToast('Profile updated successfully!', 'success');
+            setIsEditing(false);
+            setAvatarFile(null);
+            setAvatarPreview(null);
+        } catch (error: any) {
+            showToast(error.response?.data?.message || 'Failed to update profile', 'error');
+        }
+    };
 
     if (!user) {
         return (
@@ -27,26 +149,49 @@ export const Profile: React.FC = () => {
 
                 {/* Header Section */}
                 <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row items-center gap-6">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary-500 to-primary-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-primary-500/30">
-                        {user.name.charAt(0).toUpperCase()}
+                    <div className="relative group">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary-500 to-primary-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-primary-500/30 overflow-hidden">
+                            {avatarPreview ? (
+                                <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                            ) : user?.avatar ? (
+                                <img src={`http://localhost:5000${user.avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                user?.name?.charAt(0).toUpperCase()
+                            )}
+                        </div>
+                        {isEditing && (
+                            <label className="absolute inset-0 bg-black/40 rounded-full flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera className="w-6 h-6 text-white mb-1" />
+                                <span className="text-[10px] text-white font-medium">Upload</span>
+                                <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                            </label>
+                        )}
                     </div>
                     <div className="flex-1 text-center md:text-left">
-                        <h1 className="text-3xl font-bold text-slate-900">{user.name}</h1>
-                        <p className="text-slate-500 mt-1">{user.email}</p>
+                        <h1 className="text-3xl font-bold text-slate-900">{user?.name}</h1>
+                        <p className="text-slate-500 mt-1">{user?.email}</p>
                         <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-3">
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-medium">
                                 <Shield className="w-4 h-4" />
                                 Verified Account
                             </span>
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-50 text-primary-700 text-sm font-medium">
-                                Member since 2023
-                            </span>
                         </div>
                     </div>
                     <div className="flex w-full md:w-auto mt-4 md:mt-0 gap-3">
-                        <Button variant="outline" className="flex-1 md:flex-none" icon={<Edit2 className="w-4 h-4" />}>
-                            Edit Profile
-                        </Button>
+                        {!isEditing ? (
+                            <Button variant="outline" className="flex-1 md:flex-none" icon={<Edit2 className="w-4 h-4" />} onClick={() => setIsEditing(true)}>
+                                Edit Profile
+                            </Button>
+                        ) : (
+                            <div className="flex gap-2">
+                                <Button variant="outline" className="flex-1 md:flex-none text-slate-500 hover:bg-slate-50" icon={<X className="w-4 h-4" />} onClick={() => { setIsEditing(false); loadProfile(); }}>
+                                    Cancel
+                                </Button>
+                                <Button variant="primary" className="flex-1 md:flex-none" icon={<Save className="w-4 h-4" />} onClick={handleSaveProfile}>
+                                    Save
+                                </Button>
+                            </div>
+                        )}
                         <Button variant="outline" className="flex-1 md:flex-none text-red-600 hover:bg-red-50 hover:border-red-200 hover:text-red-700" onClick={logout} icon={<LogOut className="w-4 h-4" />}>
                             Logout
                         </Button>
@@ -103,20 +248,58 @@ export const Profile: React.FC = () => {
                                         <User className="w-5 h-5 text-primary-600" />
                                         Contact Information
                                     </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-500 mb-1">Full Name</p>
-                                            <p className="text-slate-900 font-medium">{user.name}</p>
+                                    {isEditing ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                                                <input type="text" value={formData.full_name} onChange={(e) => setFormData({...formData, full_name: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:ring-primary-500 focus:border-primary-500" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1">Email (Cannot be changed)</label>
+                                                <input type="email" disabled value={user?.email || ''} className="w-full border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-slate-500" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                                                <input type="text" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:ring-primary-500 focus:border-primary-500" placeholder="+1 (555) 123-4567" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                                                <input type="date" value={formData.dob} onChange={(e) => setFormData({...formData, dob: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:ring-primary-500 focus:border-primary-500" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1">Gender</label>
+                                                <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:ring-primary-500 focus:border-primary-500">
+                                                    <option value="">Select Gender</option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-500 mb-1">Email Address</p>
-                                            <p className="text-slate-900 font-medium">{user.email}</p>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-500 mb-1">Full Name</p>
+                                                <p className="text-slate-900 font-medium">{user?.name || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-500 mb-1">Email Address</p>
+                                                <p className="text-slate-900 font-medium">{user?.email || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-500 mb-1">Phone Number</p>
+                                                <p className="text-slate-900 font-medium">{formData.phone || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-500 mb-1">Date of Birth</p>
+                                                <p className="text-slate-900 font-medium">{formData.dob || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-500 mb-1">Gender</p>
+                                                <p className="text-slate-900 font-medium capitalize">{formData.gender || '-'}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-500 mb-1">Phone Number</p>
-                                            <p className="text-slate-900 font-medium">+1 (555) 123-4567 <span className="text-xs text-slate-400 ml-2">(Unverified)</span></p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100">
@@ -125,16 +308,38 @@ export const Profile: React.FC = () => {
                                             <MapPin className="w-5 h-5 text-primary-600" />
                                             Saved Addresses
                                         </h2>
-                                        <Button variant="outline" size="sm">Add New</Button>
+                                        <Button variant="outline" size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => {
+                                            setEditingAddress({});
+                                            setIsAddressModalOpen(true);
+                                        }}>
+                                            Add New
+                                        </Button>
                                     </div>
-                                    <div className="border border-slate-200 rounded-2xl p-4 relative bg-slate-50/50">
-                                        <span className="absolute top-4 right-4 bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-1 rounded-md">Default</span>
-                                        <h4 className="font-bold text-slate-900 mb-1">Home Address</h4>
-                                        <p className="text-slate-600 text-sm">
-                                            123 Main Street, Apt 4B<br />
-                                            New York, NY 10001<br />
-                                            United States
-                                        </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {addresses.map((address) => (
+                                            <div key={address.id} className={`border rounded-2xl p-4 relative ${address.is_default ? 'bg-primary-50/50 border-primary-200' : 'bg-slate-50/50 border-slate-200'}`}>
+                                                {address.is_default && (
+                                                    <span className="absolute top-4 right-4 bg-primary-100 text-primary-700 text-xs font-bold px-2.5 py-1 rounded-md">Default</span>
+                                                )}
+                                                <h4 className="font-bold text-slate-900 mb-1">{address.detailed_address || 'Address'}</h4>
+                                                <p className="text-slate-600 text-sm mb-3">
+                                                    {address.street && <>{address.street}<br /></>}
+                                                    {address.city}{address.state ? `, ${address.state}` : ''}{address.country ? ` - ${address.country}` : ''}<br />
+                                                    {address.phone && <span className="font-medium">📞 {address.phone}</span>}
+                                                </p>
+                                                <div className="flex items-center gap-3">
+                                                    <button onClick={() => { setEditingAddress(address); setIsAddressModalOpen(true); }} className="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1">
+                                                        <Edit2 className="w-3.5 h-3.5" /> Edit
+                                                    </button>
+                                                    <button onClick={() => handleDeleteAddress(address.id)} className="text-sm font-medium text-red-500 hover:text-red-600 flex items-center gap-1">
+                                                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {addresses.length === 0 && (
+                                            <p className="text-slate-500 text-sm py-4">No addresses saved yet. Add one to speed up checkout.</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -264,6 +469,65 @@ export const Profile: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Address Modal */}
+            {isAddressModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900">
+                                {editingAddress?.id ? 'Edit Address' : 'Add New Address'}
+                            </h3>
+                            <button onClick={() => { setIsAddressModalOpen(false); setEditingAddress(null); }} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-50 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddressSubmit} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Street / Building</label>
+                                <input required type="text" value={editingAddress?.street || ''} onChange={(e) => setEditingAddress({...editingAddress, street: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500" placeholder="123 Main St" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Detailed Address (Optional)</label>
+                                <input type="text" value={editingAddress?.detailed_address || ''} onChange={(e) => setEditingAddress({...editingAddress, detailed_address: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-primary-500 focus:border-primary-500" placeholder="Apartment, suite, unit, building, floor, etc." />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
+                                    <input required type="text" value={editingAddress?.city || ''} onChange={(e) => setEditingAddress({...editingAddress, city: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500" placeholder="New York" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">State / Province</label>
+                                    <input required type="text" value={editingAddress?.state || ''} onChange={(e) => setEditingAddress({...editingAddress, state: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500" placeholder="NY" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Country</label>
+                                    <input required type="text" value={editingAddress?.country || ''} onChange={(e) => setEditingAddress({...editingAddress, country: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500" placeholder="United States" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                                    <input type="text" value={editingAddress?.phone || ''} onChange={(e) => setEditingAddress({...editingAddress, phone: e.target.value})} className="w-full border-slate-200 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500" placeholder="+1..." />
+                                </div>
+                            </div>
+                            <label className="flex items-center gap-3 pt-2 cursor-pointer">
+                                <input type="checkbox" checked={editingAddress?.is_default || false} onChange={(e) => setEditingAddress({...editingAddress, is_default: e.target.checked})} className="w-4 h-4 text-primary-600 rounded border-slate-300 focus:ring-primary-500" />
+                                <span className="text-sm font-medium text-slate-700">Set as default address</span>
+                            </label>
+
+                            <div className="pt-4 flex gap-3">
+                                <Button type="button" variant="outline" className="flex-1" onClick={() => { setIsAddressModalOpen(false); setEditingAddress(null); }}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" variant="primary" className="flex-1 text-center justify-center">
+                                    {editingAddress?.id ? 'Save Changes' : 'Add Address'}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
