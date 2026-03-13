@@ -1,25 +1,25 @@
 import React, { createContext, useContext, useState } from 'react';
 
 interface User {
+    id: string;
     email: string;
     name: string;
+    role: string;
+    avatar?: string;
+    dob?: string;
+    phone?: string;
+    gender?: string;
 }
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string, password: string) => boolean;
+    login: (userData: User, accessToken: string, refreshToken?: string) => void;
+    updateUser: (userData: Partial<User>) => void;
     logout: () => void;
     isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-// Tài khoản fix cứng để test
-const MOCK_USER = {
-    email: 'admin@aurastyle.com',
-    password: '123456',
-    name: 'Admin User',
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(() => {
@@ -27,23 +27,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return saved ? JSON.parse(saved) : null;
     });
 
-    const login = (email: string, password: string): boolean => {
-        if (email === MOCK_USER.email && password === MOCK_USER.password) {
-            const loggedInUser = { email: MOCK_USER.email, name: MOCK_USER.name };
-            setUser(loggedInUser);
-            localStorage.setItem('user', JSON.stringify(loggedInUser));
-            return true;
+    const login = (userData: User, accessToken: string, refreshToken?: string) => {
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('access_token', accessToken);
+        if (refreshToken) {
+            localStorage.setItem('refresh_token', refreshToken);
         }
-        return false;
+    };
+
+    const updateUser = (updatedFields: Partial<User>) => {
+        setUser((prev) => {
+            if (!prev) return null;
+            const newUser = { ...prev, ...updatedFields };
+            localStorage.setItem('user', JSON.stringify(newUser));
+            return newUser;
+        });
     };
 
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, login, updateUser, logout, isAuthenticated: !!user }}>
             {children}
         </AuthContext.Provider>
     );

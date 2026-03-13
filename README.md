@@ -257,3 +257,52 @@ npm run build
 ```
 
 Tạo 2 thư mục dist (build) chứa project đã build của mình. Có nghĩa phải build thành công thì mới deploy được
+
+# Backend
+
+NodeJS + MySQL (Xampp)
+
+Ta thấy ở front end và back end có 1 file package.json. File này dùng để ghi những thư viện đang sử dụng
+
+Viết code theo kiến trúc Client Server
+
+Có nghĩa Client và Server sẽ giao tiếp với nhau thông qua API
+
+Code backend theo kiến trúc MVC (model - view - controller)
+
+Model: Đại diện cho dữ liệu và quy tắc nghiệp vụ của ứng dụng. Model xử lý tất cả các thao tác liên quan đến dữ liệu, bao gồm lưu trữ, truy xuất và cập nhật dữ liệu. Đây là phần back-end của ứng dụng, nơi chứa tất cả logic dữ liệu. 
+
+View: Chịu trách nhiệm hiển thị dữ liệu cho người dùng. View là giao diện người dùng, nơi người dùng tương tác với ứng dụng. Nó thường được xây dựng bằng các ngôn ngữ template như HTML, JSP hoặc React. 
+
+Controller: Là cầu nối giữa Model và View. Controller nhận các yêu cầu từ người dùng, xử lý chúng và cập nhật Model, sau đó chọn View phù hợp để hiển thị kết quả.
+
+Thư mục routes chứa các endpoint 
+
+# Luồng xử lý backend, frontend
+
+![alt text](image-1.png)
+
+# File `.env`
+
+File này dùng để lưu các thông tin của hệ thống, thường các thông tin nhạy cảm như mật khẩu, ...
+
+# Dịch vụ bên thứ ba? 
+
+Ứng dụng của mình sử dụng chức năng, thông tin lấy từ ứng dụng khác (thì ứng dụng khác này được gọi là dịch bên thứ 3)
+
+Ví dụ: Làm chức năng đăng nhập với Gooogle (Sử dụng dịch vụ đăng nhập của google)
+
+# Chạy backend
+
+```
+cd backend
+npm run dev
+```
+
+Backend đang triển khai theo mô hình MVC (Model - View - Controller). Ngoài mô hình MVC này ra còn có MVP
+
+# Trong quá trình dev thì nó có những công cụ hỗ trợ trong việc dev
+
+Điển hình là công cụ tự động build khi code thay đổi
+
+Công cụ mình đang dùng ở nodejs là nodemon

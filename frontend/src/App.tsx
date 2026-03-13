@@ -12,6 +12,7 @@ import { Profile } from './pages/Profile'
 import { Wishlist } from './pages/Wishlist'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
+import EmailVerification from './components/EmailVerification';
 import { LoadingOverlay } from './components/LoadingOverlay'
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

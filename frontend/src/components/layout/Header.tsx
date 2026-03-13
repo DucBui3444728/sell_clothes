@@ -95,10 +95,14 @@ export const Header: React.FC = () => {
                                 <>
                                     {/* User Info */}
                                     <Link to="/profile" className="hidden sm:flex items-center gap-2 hover:bg-slate-50 px-2 py-1.5 rounded-xl transition-colors cursor-pointer">
-                                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-                                            <span className="text-sm font-bold text-primary-700">
-                                                {user?.name?.charAt(0).toUpperCase()}
-                                            </span>
+                                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
+                                            {user?.avatar ? (
+                                                <img src={`http://localhost:5000${user.avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-sm font-bold text-primary-700">
+                                                    {user?.name?.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="text-sm font-medium text-slate-700 max-w-[100px] truncate">
                                             {user?.name}
@@ -203,10 +207,14 @@ export const Header: React.FC = () => {
                 {isAuthenticated && (
                     <Link to="/profile" onClick={closeSidebar} className="block px-6 py-4 border-b border-slate-100 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                                <span className="text-base font-bold text-primary-700">
-                                    {user?.name?.charAt(0).toUpperCase()}
-                                </span>
+                            <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0 overflow-hidden">
+                                {user?.avatar ? (
+                                    <img src={`http://localhost:5000${user.avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-base font-bold text-primary-700">
+                                        {user?.name?.charAt(0).toUpperCase()}
+                                    </span>
+                                )}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
