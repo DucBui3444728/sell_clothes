@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Search, User, Menu, LogOut, X, Home, Store, Grid3x3, Info, Heart } from 'lucide-react';
+import { ShoppingBag, Search, User, Menu, X, Home, Store, Grid3x3, Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { useWishlist } from '../../context/WishlistContext';
 
 export const Header: React.FC = () => {
-    const { user, isAuthenticated, logout } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const { cartCount } = useCart();
-    const { wishlistCount } = useWishlist();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -109,14 +107,7 @@ export const Header: React.FC = () => {
                                         </span>
                                     </Link>
 
-                                    {/* Logout */}
-                                    <button
-                                        onClick={logout}
-                                        className="text-slate-500 hover:text-red-500 transition-colors"
-                                        title="Logout"
-                                    >
-                                        <LogOut className="h-5 w-5" />
-                                    </button>
+
                                 </>
                             ) : (
                                 <Link to="/login" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white bg-primary-800 hover:bg-black px-5 py-2 transition-colors">
@@ -125,15 +116,7 @@ export const Header: React.FC = () => {
                                 </Link>
                             )}
 
-                            {/* Wishlist */}
-                            <Link to="/wishlist" className="relative text-slate-500 hover:text-rose-500 transition-colors">
-                                <Heart className="h-5 w-5" />
-                                {wishlistCount > 0 && (
-                                    <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
-                                        {wishlistCount}
-                                    </span>
-                                )}
-                            </Link>
+
 
                             {/* Cart (Available to all) */}
                             <Link to="/cart" className="relative text-slate-500 hover:text-primary-600 transition-colors">
@@ -244,20 +227,7 @@ export const Header: React.FC = () => {
 
                 {/* Auth Actions & Cart & Wishlist (Mobile) */}
                 <div className="px-4 py-4 space-y-1">
-                    <Link
-                        to="/wishlist"
-                        onClick={closeSidebar}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${location.pathname === '/wishlist'
-                            ? 'bg-rose-50 text-rose-600'
-                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                            }`}
-                    >
-                        <Heart className="w-5 h-5" />
-                        Wishlist
-                        {wishlistCount > 0 && (
-                            <span className="ml-auto bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{wishlistCount}</span>
-                        )}
-                    </Link>
+
 
                     {/* Cart is always visible on mobile sidebar too */}
                     <Link
@@ -277,13 +247,7 @@ export const Header: React.FC = () => {
 
                     {isAuthenticated ? (
                         <>
-                            <button
-                                onClick={() => { logout(); closeSidebar(); }}
-                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
-                            >
-                                <LogOut className="w-5 h-5" />
-                                Logout
-                            </button>
+
                         </>
                     ) : (
                         <Link

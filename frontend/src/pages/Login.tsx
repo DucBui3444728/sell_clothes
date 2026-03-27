@@ -52,7 +52,8 @@ export const Login: React.FC = () => {
                 id: data.user.id,
                 email: data.user.email,
                 name: data.user.full_name,
-                role: data.user.role || 'user'
+                role: data.user.role || 'user',
+                avatar: data.user.avatar
             };
             
             login(mappedUser, data.access_token, data.refresh_token);
