@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search, User, Menu, X, Home, Store, Grid3x3, Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { resolveImageUrl } from '../../services/api';
 import { useCart } from '../../context/CartContext';
 
 export const Header: React.FC = () => {
@@ -95,7 +96,7 @@ export const Header: React.FC = () => {
                                     <Link to="/profile" className="hidden sm:flex items-center gap-2 hover:bg-slate-50 px-2 py-1.5 rounded-xl transition-colors cursor-pointer">
                                         <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
                                             {user?.avatar ? (
-                                                <img src={`http://localhost:5000${user.avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                                                <img src={resolveImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                                             ) : (
                                                 <span className="text-sm font-bold text-primary-700">
                                                     {user?.name?.charAt(0).toUpperCase()}
@@ -192,7 +193,7 @@ export const Header: React.FC = () => {
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0 overflow-hidden">
                                 {user?.avatar ? (
-                                    <img src={`http://localhost:5000${user.avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                                    <img src={resolveImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="text-base font-bold text-primary-700">
                                         {user?.name?.charAt(0).toUpperCase()}

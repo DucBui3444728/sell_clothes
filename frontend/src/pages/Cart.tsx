@@ -51,7 +51,9 @@ export const Cart: React.FC = () => {
                                                 <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-lg bg-slate-100" />
                                                 <div className="flex-1 text-left">
                                                     <h3 className="text-base font-semibold text-slate-900 mb-1">{item.name}</h3>
-                                                    <p className="text-sm text-slate-500 mb-2">Color: {item.color} | Size: {item.size}</p>
+                                                    <p className="text-sm text-slate-500 mb-2">
+                                                        {item.attributes ? Object.entries(item.attributes).map(([key, val]) => `${key}: ${val}`).join(' | ') : ''}
+                                                    </p>
                                                     <button
                                                         type="button"
                                                         onClick={() => removeFromCart(item.id)}

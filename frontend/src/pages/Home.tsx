@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, ShieldCheck, Truck } from 'lucide-react';
+import { productService } from '../services/api';
 import { ProductCard } from '../components/product/ProductCard';
-import { ALL_PRODUCTS } from '../data/products';
-
-const FEATURED_PRODUCTS = ALL_PRODUCTS.slice(0, 4);
 
 const SLIDES = [
     {
@@ -39,8 +37,13 @@ const SLIDES = [
 export const Home: React.FC = () => {
     const [current, setCurrent] = useState(0);
     const [animating, setAnimating] = useState(false);
+    const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
 
     useEffect(() => {
+        productService.getProducts()
+            .then(data => setFeaturedProducts(data.slice(0, 4)))
+            .catch(console.error);
+
         const interval = setInterval(() => {
             setAnimating(true);
             setTimeout(() => {
@@ -250,9 +253,11 @@ export const Home: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {FEATURED_PRODUCTS.map((product) => (
+                        {featuredProducts.length > 0 ? featuredProducts.map((product) => (
                             <ProductCard key={product.id} product={product} />
-                        ))}
+                        )) : (
+                            <div className="col-span-4 text-center text-slate-500 py-12">Loading featured products...</div>
+                        )}
                     </div>
 
                     <div className="mt-16 text-center">

@@ -5,6 +5,7 @@ import { ShoppingCart, Heart } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { resolveImageUrl } from '../../services/api';
 
 export interface Product {
     id: string;
@@ -13,8 +14,9 @@ export interface Product {
     image: string;
     category: string;
     rating: number;
-    colors?: string[];
-    sizes?: string[];
+    color?: string; // legacy support if any
+    size?: string; // legacy support if any
+    attributes?: any;
 }
 
 interface ProductCardProps {
@@ -32,13 +34,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         e.preventDefault();
         e.stopPropagation();
 
+        let parsedAttrs: any[] = [];
+        if (typeof product.attributes === 'string') {
+            try { parsedAttrs = JSON.parse(product.attributes); } catch(e) {}
+        } else if (Array.isArray(product.attributes)) {
+            parsedAttrs = product.attributes;
+        }
+
+        const initialSelection: Record<string, string> = {};
+        parsedAttrs.forEach((a: any) => {
+            if (a.name && a.values && a.values.length > 0) {
+                initialSelection[a.name] = a.values[0];
+            }
+        });
+
         addToCart({
             productId: product.id,
             name: product.name,
             price: product.price,
-            image: product.image,
-            color: product.colors?.[0] || 'Default',
-            size: product.sizes?.[0] || 'One Size',
+            image: resolveImageUrl(product.image),
+            attributes: initialSelection,
             quantity: 1,
         });
 
@@ -63,7 +78,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <Link to={`/product/${product.id}`} className="block">
                 <div className="relative aspect-[3/4] overflow-hidden bg-slate-50">
                     <img
-                        src={product.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=800'}
+                        src={resolveImageUrl(product.image, 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=800')}
                         alt={product.name}
                         className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                     />
@@ -75,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-primary-600' : ''}`} />
                     </button>
                     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 text-[10px] uppercase tracking-widest font-medium text-slate-800 shadow-sm">
-                        {product.category}
+                        {typeof product.category === 'object' ? (product.category as any)?.name : product.category}
                     </div>
                 </div>
             </Link>
@@ -86,7 +101,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </Link>
                 <div className="flex items-center justify-between mt-3">
                     <span className="text-lg font-light text-slate-800">
-                        ${product.price.toFixed(2)}
+                        ${parseFloat(String(product.price)).toFixed(2)}
                     </span>
                     <button
                         title="Add to Cart"
