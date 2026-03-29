@@ -333,3 +333,19 @@ Deploy có 2 loại chính: hosting, vps hosting
 
 - Hosting: 
 - VPS Hosting:
+
+Hosting bản chất là việc mình đi thuê máy tính chạy 24/24 không bao giờ nghỉ
+
+Mình hoàn toàn có thể sử dụng máy tính của mình để đẩy website lên môi trường người dùng cuối
+
+Tại sao không sử dụng máy tính của mình, lại đi thuê máy làm gì???
+
+Client hay Server bản chất là máy tính hoặc thiết bị di động như iphone, samsung.... có thể kết nối được mạng làm server hoặc client
+
+Internet là môi trường các máy tính được kết nối với nhau nhằm chia sẻ thông tin.
+
+Hiểu đơn giản về internet thu nhỏ, chính là việc em sử dụng dây cắm kết nối 2 cái máy tính với nhau. 1 máy tính là server, 1 máy tính là client
+
+Client muốn xem video từ server, thì server sẽ chia sẻ cho client đó bằng cách chia sẻ tài nguyên thông qua dây cắm kết nối giữa 2 máy tính.
+
+Lí do không sử dụng trên máy tính cá nhân là vì tốn điện, hỏng hóc máy tính....
