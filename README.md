@@ -326,3 +326,10 @@ Deploy là gì?
 Deploy đơn giản là đẩy ứng dụng lên môi trường người dùng thật
 
 Môi trường dev, môi trường production, môi trường test....
+
+# Deploy
+
+Deploy có 2 loại chính: hosting, vps hosting
+
+- Hosting: 
+- VPS Hosting:

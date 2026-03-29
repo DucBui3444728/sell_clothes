@@ -16,6 +16,8 @@ export interface Product {
     rating: number;
     color?: string; // legacy support if any
     size?: string; // legacy support if any
+    colors?: string[];
+    sizes?: string[];
     attributes?: any;
 }
 
