@@ -290,7 +290,7 @@ export const Checkout: React.FC = () => {
                                         </div>
                                         <div className="flex-1">
                                             <h4 className="text-sm font-medium text-slate-900 line-clamp-1">{item.name}</h4>
-                                            <p className="text-xs text-slate-500 mt-1">Qty: {item.quantity} | {item.size}</p>
+                                            <p className="text-xs text-slate-500 mt-1">Qty: {item.quantity} | {item.attributes ? Object.entries(item.attributes).map(([k,v]) => `${k}: ${v}`).join(', ') : ''}</p>
                                             <p className="text-sm font-semibold text-slate-900 mt-1">${(item.price * item.quantity).toFixed(2)}</p>
                                         </div>
                                     </div>

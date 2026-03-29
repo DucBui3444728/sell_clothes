@@ -2,39 +2,68 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Star, Minus, Plus, Heart, Shield, RefreshCw, Truck, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { ALL_PRODUCTS } from '../data/products';
+import { productService, resolveImageUrl } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 
 export const ProductDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const product = ALL_PRODUCTS.find(p => p.id === id);
+    const [product, setProduct] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
     const { addToCart } = useCart();
     const { showToast } = useToast();
 
     const [quantity, setQuantity] = useState(1);
-    const [selectedSize, setSelectedSize] = useState('');
-    const [selectedColor, setSelectedColor] = useState('');
+    const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
+    const [mainImage, setMainImage] = useState('');
 
-    const sizes = product?.sizes || ['S', 'M', 'L', 'XL'];
-    const colors = product?.colors || ['#0f172a', '#ffffff', '#38bdf8']; // Fallback colors
+    const parseJsonField = (val: any) => {
+        if (!val) return [];
+        if (Array.isArray(val)) return val;
+        try { return JSON.parse(val); } catch { return []; }
+    };
 
     useEffect(() => {
-        if (sizes.length > 0) setSelectedSize(sizes[0]);
-        if (colors.length > 0) setSelectedColor(colors[0]);
-    }, [product]);
+        if (id) {
+            productService.getProductById(id).then(data => {
+                setProduct(data);
+                
+                // Initialize default attribute selection
+                if (data.attributes) {
+                    const attrs = parseJsonField(data.attributes);
+                    const initialSelection: Record<string, string> = {};
+                    attrs.forEach((a: any) => {
+                        if (a.values && a.values.length > 0) {
+                            initialSelection[a.name] = a.values[0];
+                        }
+                    });
+                    setSelectedAttributes(initialSelection);
+                }
+                
+                const initialImages = data.media && data.media.length > 0
+                    ? data.media.map((m: any) => resolveImageUrl(m.url))
+                    : data.image ? [resolveImageUrl(data.image)] : [];
+                
+                if (initialImages.length > 0) setMainImage(initialImages[0]);
+                
+                setLoading(false);
+            }).catch(err => {
+                console.error(err);
+                setLoading(false);
+            });
+        }
+    }, [id]);
 
-    // Use product image + some fallback gallery images
-    const images = product
-        ? [
-            product.image,
-            'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=800',
-            'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?auto=format&fit=crop&q=80&w=800'
-        ]
-        : [];
+    const attributes = parseJsonField(product?.attributes);
 
-    const [mainImage, setMainImage] = useState(images[0] || '');
+    const images = product?.media && product.media.length > 0
+        ? product.media.map((m: any) => resolveImageUrl(m.url))
+        : product?.image ? [resolveImageUrl(product.image)] : [];
+
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center bg-slate-50"><p className="text-slate-500">Loading product...</p></div>;
+    }
 
     if (!product) {
         return (
@@ -50,16 +79,27 @@ export const ProductDetail: React.FC = () => {
         );
     }
 
+    const currentVariant = product?.variants?.find((v: any) => {
+        const vAttrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes) : v.attributes;
+        const keys = Object.keys(selectedAttributes);
+        if (keys.length === 0) return true; // If no attributes, it matches the base
+        return keys.every(k => vAttrs[k] === selectedAttributes[k]);
+    });
+
+    const displayPrice = currentVariant ? parseFloat(currentVariant.price) : parseFloat(product?.price || 0);
+    const displayStock = currentVariant ? currentVariant.stock : (product?.stock || 0);
+    const isOutOfStock = displayStock <= 0;
+
     const handleAddToCart = () => {
-        if (!product) return;
+        if (!product || isOutOfStock) return;
 
         addToCart({
             productId: product.id,
             name: product.name,
-            price: product.price,
-            image: product.image,
-            color: selectedColor, // In a real app we'd map hex to name if needed
-            size: selectedSize,
+            price: displayPrice,
+            image: resolveImageUrl(product.image),
+            variantId: currentVariant ? currentVariant.id : undefined,
+            attributes: selectedAttributes,
             quantity: quantity,
         });
 
@@ -83,7 +123,7 @@ export const ProductDetail: React.FC = () => {
                     {/* Image Gallery */}
                     <div className="flex flex-col-reverse md:flex-row gap-4">
                         <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-visible pb-2 md:pb-0 w-full md:w-24 shrink-0">
-                            {images.map((img, idx) => (
+                            {images.map((img: string, idx: number) => (
                                 <button
                                     key={idx}
                                     onClick={() => setMainImage(img)}
@@ -103,11 +143,11 @@ export const ProductDetail: React.FC = () => {
 
                     {/* Product Info */}
                     <div className="flex flex-col">
-                        <span className="text-sm font-medium text-primary-800 uppercase tracking-widest mb-4 inline-block">{product.category}</span>
+                        <span className="text-sm font-medium text-primary-800 uppercase tracking-widest mb-4 inline-block">{product.category?.name || 'Uncategorized'}</span>
                         <h1 className="text-3xl sm:text-5xl font-serif font-medium text-slate-900 leading-tight">{product.name}</h1>
 
                         <div className="flex items-center gap-4 mt-6">
-                            <span className="text-3xl font-light text-slate-900">${product.price.toFixed(2)}</span>
+                            <span className="text-3xl font-light text-slate-900">${displayPrice.toFixed(2)}</span>
                             <div className="flex items-center gap-1 bg-slate-50 px-3 py-1 border border-slate-200">
                                 <Star className="w-4 h-4 text-emerald-500 fill-emerald-500" />
                                 <span className="text-sm font-semibold text-slate-700">{product.rating}</span>
@@ -115,46 +155,48 @@ export const ProductDetail: React.FC = () => {
                             </div>
                         </div>
 
-                        <p className="mt-8 text-lg text-slate-600 leading-relaxed font-light">
-                            Our signature piece that offers an unparalleled level of comfort. Pre-shrunk and garment-dyed for a lived-in feel from day one. Perfect for any casual occasion.
+                        <p className="mt-8 text-lg text-slate-600 leading-relaxed font-light whitespace-pre-line">
+                            {product.description || 'Our signature piece that offers an unparalleled level of comfort. Pre-shrunk and garment-dyed for a lived-in feel from day one. Perfect for any casual occasion.'}
                         </p>
 
                         <div className="mt-8 border-t border-slate-100 pt-8 space-y-8">
-                            {/* Colors */}
-                            <div>
-                                <h3 className="text-xs font-semibold text-slate-900 mb-4 uppercase tracking-widest">Color</h3>
-                                <div className="flex gap-4">
-                                    {colors.map(colorHex => (
-                                        <button
-                                            key={colorHex}
-                                            onClick={() => setSelectedColor(colorHex)}
-                                            className={`w-12 h-12 flex items-center justify-center transition-all border ${selectedColor === colorHex ? 'border-black p-1' : 'border-transparent'}`}
-                                            title={colorHex}
-                                        >
-                                            <div className="w-full h-full rounded-sm border border-slate-200" style={{ backgroundColor: colorHex }} />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            {/* Dynamic Attributes */}
+                            {attributes.map((attr: any) => (
+                                <div key={attr.name}>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-widest">{attr.name}: <span className="text-slate-500 font-normal ml-2">{selectedAttributes[attr.name]}</span></h3>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3">
+                                        {attr.values.map((val: string) => {
+                                            const isHexColor = val.startsWith('#') && (val.length === 4 || val.length === 7);
+                                            const isSelected = selectedAttributes[attr.name] === val;
+                                            
+                                            if (isHexColor) {
+                                                return (
+                                                    <button
+                                                        key={val}
+                                                        onClick={() => setSelectedAttributes({ ...selectedAttributes, [attr.name]: val })}
+                                                        className={`w-12 h-12 flex items-center justify-center transition-all border ${isSelected ? 'border-black p-1' : 'border-transparent'}`}
+                                                        title={val}
+                                                    >
+                                                        <div className="w-full h-full rounded-sm border border-slate-200" style={{ backgroundColor: val }} />
+                                                    </button>
+                                                );
+                                            }
 
-                            {/* Sizes */}
-                            <div>
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-widest">Size: <span className="text-slate-500 font-normal ml-2">{selectedSize}</span></h3>
-                                    <button className="text-xs text-slate-500 uppercase tracking-widest hover:text-black hover:underline transition-colors">Size Guide</button>
+                                            return (
+                                                <button
+                                                    key={val}
+                                                    onClick={() => setSelectedAttributes({ ...selectedAttributes, [attr.name]: val })}
+                                                    className={`py-2 px-4 text-sm font-medium transition-all ${isSelected ? 'bg-black text-white' : 'bg-transparent text-slate-700 border border-slate-300 hover:border-slate-800'}`}
+                                                >
+                                                    {val}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-4 gap-3">
-                                    {sizes.map(size => (
-                                        <button
-                                            key={size}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={`py-3 px-4 text-sm font-medium transition-all ${selectedSize === size ? 'bg-black text-white' : 'bg-transparent text-slate-700 border border-slate-300 hover:border-slate-800'}`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            ))}
 
                             {/* Quantity */}
                             <div>
@@ -182,9 +224,10 @@ export const ProductDetail: React.FC = () => {
                                     variant="primary"
                                     size="lg"
                                     className="flex-1 h-16"
+                                    disabled={isOutOfStock}
                                     onClick={handleAddToCart}
                                 >
-                                    Add to Cart
+                                    {isOutOfStock ? 'OUT OF STOCK' : 'Add to Cart'}
                                 </Button>
                             </div>
 

@@ -2,13 +2,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 export interface CartItem {
-    id: string; // Use a unique ID like `${productId}-${color}-${size}`
+    id: string; // Use a unique ID like `${productId}-${JSON.stringify(attributes)}`
     productId: string;
+    variantId?: string;
     name: string;
     price: number;
     image: string;
-    color: string;
-    size: string;
+    attributes: Record<string, string>;
     quantity: number;
 }
 
@@ -36,7 +36,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const addToCart = (newItem: Omit<CartItem, 'id'>) => {
         setItems(prevItems => {
-            const itemId = `${newItem.productId}-${newItem.color}-${newItem.size}`;
+            // Create a deterministic string from attributes object to use as ID
+            const attrKeys = newItem.attributes ? Object.keys(newItem.attributes).sort() : [];
+            const attrString = attrKeys.map(k => `${k}:${newItem.attributes[k]}`).join('|');
+            const itemId = `${newItem.productId}-${attrString}`;
+            
             const existingItemIndex = prevItems.findIndex(item => item.id === itemId);
 
             if (existingItemIndex >= 0) {

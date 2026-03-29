@@ -306,3 +306,23 @@ Backend đang triển khai theo mô hình MVC (Model - View - Controller). Ngoà
 Điển hình là công cụ tự động build khi code thay đổi
 
 Công cụ mình đang dùng ở nodejs là nodemon
+
+# Trong software engineer có 3 kiểu code khác nhau hoàn toàn về cách hoạt động:
+
+- Kiểu 1: Code frontend + backend trong 1 thư mục (monolithic)
+- Kiểu 2: Code frontend 1 thư mục, backend 1 thư mục (monolithic)
+- Kiểu 3: Code frontend nhiều thư mục, backend nhiều thư mục (microservices)
+
+Hiện tại bài mình đang làm là kiểu 2. Đối với kiểu 2 thì
+
+Frontend bây giờ đóng vai trò như 1 ứng dụng
+
+Backend bây giờ đóng vai trò như 1 ứng dụng 
+
+2 ứng dụng riêng biệt, 2 ứng dụng giao tiếp với nhau thông API dựa trên mobile client - server
+
+Deploy là gì?
+
+Deploy đơn giản là đẩy ứng dụng lên môi trường người dùng thật
+
+Môi trường dev, môi trường production, môi trường test....

@@ -4,13 +4,15 @@ import { useUserActivity } from '../context/UserActivityContext';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/product/ProductCard';
 import { User, Package, Settings, LogOut, ChevronRight, Edit2, MapPin, CreditCard, Shield, Lock, Clock, Camera, Save, X, Plus, Trash2 } from 'lucide-react';
-import { userService, addressService } from '../services/api';
+import { userService, addressService, orderService, resolveImageUrl } from '../services/api';
 import type { Address } from '../services/api';
 import { useToast } from '../context/ToastContext';
 
 export const Profile: React.FC = () => {
     const { user, logout, updateUser } = useAuth();
-    const { orders, recentProducts } = useUserActivity();
+    const { recentProducts } = useUserActivity();
+    const [orders, setOrders] = useState<any[]>([]);
+    const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
     const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'settings'>('profile');
     const { showToast } = useToast();
 
@@ -33,8 +35,19 @@ export const Profile: React.FC = () => {
         if (user && !isEditing && activeTab === 'profile') {
             loadProfile();
             loadAddresses();
+        } else if (user && activeTab === 'orders') {
+            loadOrders();
         }
     }, [user, isEditing, activeTab]);
+
+    const loadOrders = async () => {
+        try {
+            const data = await orderService.getMyOrders();
+            setOrders(data);
+        } catch (error) {
+            console.error('Failed to load orders', error);
+        }
+    };
 
     const loadAddresses = async () => {
         try {
@@ -154,7 +167,7 @@ export const Profile: React.FC = () => {
                             {avatarPreview ? (
                                 <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
                             ) : user?.avatar ? (
-                                <img src={`http://localhost:5000${user.avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                                <img src={resolveImageUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
                                 user?.name?.charAt(0).toUpperCase()
                             )}
@@ -399,28 +412,31 @@ export const Profile: React.FC = () => {
                                             You haven't placed any orders yet.
                                         </div>
                                     ) : (
-                                        orders.map((order) => (
-                                            <div key={order.id} className="p-6 md:p-8 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                                <div>
-                                                    <div className="flex items-center gap-3 xl:gap-4 mb-2">
-                                                        <span className="font-bold font-mono text-slate-900">{order.id}</span>
-                                                        <span className={`px-2.5 py-1 text-xs font-bold rounded-md ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-700' :
-                                                            order.status === 'Refunded' ? 'bg-slate-100 text-slate-700' :
-                                                                'bg-primary-100 text-primary-700'
-                                                            }`}>
-                                                            {order.status}
-                                                        </span>
+                                        orders.map((order) => {
+                                            const itemCount = order.items ? order.items.reduce((sum: number, item: any) => sum + item.quantity, 0) : 0;
+                                            return (
+                                                <div key={order.id} className="p-6 md:p-8 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                                    <div>
+                                                        <div className="flex items-center gap-3 xl:gap-4 mb-2">
+                                                            <span className="font-bold font-mono text-slate-900 truncate max-w-[150px]">{order.id}</span>
+                                                            <span className={`px-2.5 py-1 text-xs font-bold rounded-md ${order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' :
+                                                                order.status === 'cancelled' ? 'bg-slate-100 text-slate-700' :
+                                                                    'bg-primary-100 text-primary-700'
+                                                                }`}>
+                                                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-slate-500">
+                                                            {new Date(order.createdAt).toLocaleDateString()} • {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                                                        </p>
                                                     </div>
-                                                    <p className="text-sm text-slate-500">
-                                                        {order.date} • {order.items} {order.items === 1 ? 'item' : 'items'}
-                                                    </p>
+                                                    <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                                                        <span className="font-bold text-slate-900">${parseFloat(String(order.total_amount)).toFixed(2)}</span>
+                                                        <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)}>View Details</Button>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                                                    <span className="font-bold text-slate-900">${order.total.toFixed(2)}</span>
-                                                    <Button variant="outline" size="sm">View Details</Button>
-                                                </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     )}
                                 </div>
                             </div>
@@ -525,6 +541,86 @@ export const Profile: React.FC = () => {
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Order Details Modal */}
+            {selectedOrder && (
+                <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-slate-900 font-serif">Order Details</h2>
+                            <button onClick={() => setSelectedOrder(null)} className="text-slate-400 hover:text-slate-600">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                                <div>
+                                    <p className="text-sm text-slate-500 mb-1">Order ID</p>
+                                    <p className="font-mono font-medium text-slate-900">{selectedOrder.id}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-slate-500 mb-1">Order Date</p>
+                                    <p className="font-medium text-slate-900">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="font-bold text-slate-900 mb-4">Items Summary</h3>
+                                <div className="space-y-4">
+                                    {selectedOrder.items?.map((item: any) => (
+                                        <div key={item.id} className="flex gap-4 p-4 border border-slate-100 rounded-xl items-center">
+                                            <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-50">
+                                                {item.product?.image ? (
+                                                    <img src={resolveImageUrl(item.product.image)} alt={item.product?.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <Package className="w-6 h-6 text-slate-300" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-medium text-slate-900 truncate">{item.product?.name || 'Unknown Product'}</h4>
+                                                <p className="text-sm text-slate-500 mt-1">
+                                                    Qty {item.quantity} {item.attributes && Object.keys(item.attributes).length > 0 ? `• ${Object.entries(item.attributes).map(([k,v]) => `${k} ${v}`).join(', ')}` : ''}
+                                                </p>
+                                            </div>
+                                            <div className="text-right font-medium text-slate-900">
+                                                ${parseFloat(String(item.price)).toFixed(2)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                                <div>
+                                    <h3 className="font-bold text-slate-900 mb-2">Shipping Information</h3>
+                                    <p className="text-slate-600 text-sm whitespace-pre-wrap">{selectedOrder.shipping_address || 'No address provided'}</p>
+                                </div>
+                                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
+                                    <h3 className="font-bold text-slate-900 mb-4 text-center border-b border-slate-200 pb-2">Payment Summary</h3>
+                                    <div className="space-y-2 mb-4">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-slate-500">Subtotal</span>
+                                            <span className="font-medium text-slate-900">${parseFloat(String(selectedOrder.total_amount)).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-slate-500">Shipping</span>
+                                            <span className="font-medium text-slate-900">Free</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between border-t border-slate-200 pt-3">
+                                        <span className="font-bold text-slate-900">Total</span>
+                                        <span className="font-bold text-primary-600 text-lg">${parseFloat(String(selectedOrder.total_amount)).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             )}
